@@ -9,10 +9,10 @@ from .ai import get_response_from_chatgpt
 from dotenv import load_dotenv
 import os
 
-# 
+# Знаходимо файл ".env"
 load_dotenv()
 
-# 
+# Отримуємо токен з файлу ".env" для роботи з Discord-ботом та зберігаємо у константу
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 # Створюємо об'єкт, що надає боту базові права (напр., отримувати повідомлення без контенту, відслідковувати нових учасників сервера тощо)
@@ -25,7 +25,7 @@ bot_client = Client(intents = intents)
 # Декоратор, що робить функцію нижче подією бота
 @bot_client.event
 async def on_ready():
-    '''Фнгукція-подія, що відпрацює, коли бот буде запщено (бот стане онлайн)'''
+    '''Функція-подія, що відпрацює, коли бот буде запщено (бот стане онлайн)'''
 
     # Отримуємо ім'я бота
     name_bot = bot_client.user
@@ -39,7 +39,7 @@ async def on_message(message):
     
     # Перевірка, чи не є автором отриманого повідомлення сам бот
     if message.author != bot_client.user:
-        # 
+        # Отримуємо відповідь від ChatGPT
         response = await get_response_from_chatgpt(message.content)
         # Отримуємо поточний канал, де повідомлення було надсілано
         current_channel = message.channel
