@@ -4,8 +4,8 @@
 У цьому файлi прописана логiка взаємодiї бота з  discord сервером
 (отримання, обробка та вiдправлення повiдомлень на сервер)
 '''
-from discord import Intents, Client
-from .ai import get_response_from_chatgpt 
+from discord import Intents, Client, File
+from .ai import get_response_from_chatgpt , get_image_from_dalle, get_speech_from_tts
 from dotenv import load_dotenv
 import os
 
@@ -39,9 +39,28 @@ async def on_message(message):
     
     # Перевірка, чи не є автором отриманого повідомлення сам бот
     if message.author != bot_client.user:
-        # Отримуємо відповідь від ChatGPT
-        response = await get_response_from_chatgpt(message.content)
+        # Перевіряємо, якщо повідомлення починаєтьс з "!image" -> Треба згенерувати зображення
+        if message.content.startswith('!image'):
+            # Отримуємо повідомлення користувача без ключового слова "!image"
+            prompt = message.content[7:]
+            # Отримуємо URL зображення, згенерованого нейронною мережею DALL-E
+            response = await get_image_from_dalle(prompt)
+        # Перевіряємо, якщо повідомлення починається ключового слова "!voice" -> Треба озвучити написане повідомлення
+        elif message.content.startswith("!voice"):
+            # Отримуємо повідомлення користувача без ключового слова "!voice"
+            input = message.content[7:]
+            # Отримуємо файл з озвученим текстом від моделі tts
+            response = await get_speech_from_tts(input)
+        else:
+            # Отримуємо відповідь від ChatGPT
+            response = await get_response_from_chatgpt(message.content)
         # Отримуємо поточний канал, де повідомлення було надсілано
         current_channel = message.channel
-        # Бот насдилає повідомлення у поточний канал
-        await current_channel.send(response)
+        # Якщо відповідь бота не є рядком (якщо бот повретає файл з озвученим текстом)
+        if type(response) != str:
+            # Бот відправляє файл з озвученим текстом 
+            await current_channel.send("Ось результат: ", file=File(response, filename = "speech.mp3"))
+        else:
+            # Бот відправляє усі інші повідомлення у вигляді тексту (url-зображеня або просто текст, згенерований gpt)
+            await current_channel.send(response)
+        
